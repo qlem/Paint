@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDockWidget, QAction, QFileDialog, QWidget, QLabel, \
-    QPushButton, QColorDialog, QVBoxLayout, QHBoxLayout, QRadioButton
-from PyQt5.QtGui import QIcon, QImage, QPainter, QPen
+    QPushButton, QColorDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QRadioButton, QGraphicsView, QGraphicsScene
+from PyQt5.QtGui import QIcon, QImage, QPainter, QPen, QColor
 import sys
 import os
 from PyQt5.QtCore import Qt, QPoint
@@ -13,37 +13,41 @@ class Painter(QWidget):
         self.image = QImage(self.size(), QImage.Format_RGB32)
         self.image.fill(Qt.white)
 
-        # draw settings
+        # default draw settings
         self.drawing = False
         self.brushSize = 3
-        self.brushColor = Qt.black
+        self.brushColor = QColor(0, 0, 0)
 
         # reference to last point recorded by mouse
         self.lastPoint = QPoint()
 
-    # event handlers
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.drawing = True
             self.lastPoint = event.pos()
-            print(self.lastPoint)
+            # print(self.lastPoint)
 
     def mouseMoveEvent(self, event):
         if (event.buttons() & Qt.LeftButton) & self.drawing:
             painter = QPainter(self.image)
-            # Images available here http://doc.qt.io/qt-5/qpen.html
             painter.setPen(QPen(self.brushColor, self.brushSize, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
             painter.drawLine(self.lastPoint, event.pos())
             self.lastPoint = event.pos()
             self.update()
 
     def mouseReleaseEvent(self, event):
-        if event.button == Qt.LeftButton:
+        if event.button() == Qt.LeftButton:
             self.drawing = False
+            print(event.pos())
 
     def paintEvent(self, event):
         canvas_painter = QPainter(self)
         canvas_painter.drawImage(self.rect(), self.image, self.image.rect())
+
+    def resizeEvent(self, event):
+        print("w: " + str(self.width()))
+        print("h: " + str(self.height()))
+        self.image = self.image.scaled(self.width(), self.height())
 
 
 class Window(QMainWindow):
@@ -57,11 +61,12 @@ class Window(QMainWindow):
         height = 600
 
         self.setWindowTitle("Paint Application")
-        self.setGeometry(top, left, width, height)
+        self.setGeometry(left, top, width, height)
 
-        # central widget
-        self.central_widget = Painter()
-        self.setCentralWidget(self.central_widget)
+        # painter
+        self.painter = Painter()
+        self.setCentralWidget(self.painter)
+        self.painter.show()
 
         # menu
         menu = self.menuBar()
@@ -92,18 +97,20 @@ class Window(QMainWindow):
         exit_action.triggered.connect(self.exit)
 
         # colour brush widget
-        self.colour_brush = QDockWidget("Colour brush", self)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.colour_brush)
-
+        self.brush_colour = QDockWidget("Colour brush", self)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.brush_colour)
         colour_brush_widget = QWidget(self)
-        self.colour_brush.setWidget(colour_brush_widget)
+        self.brush_colour.setWidget(colour_brush_widget)
 
-        button = QPushButton("color", self)
+        button = QPushButton("picker", self)
         button.clicked.connect(self.get_color)
+        self.color_indicator = QLabel()
+        self.color_indicator.setStyleSheet(self.get_color_indicator())
 
-        colour_brush_layout = QHBoxLayout()
-        colour_brush_layout.addWidget(QLabel("Color:"))
-        colour_brush_layout.addWidget(button)
+        colour_brush_layout = QGridLayout()
+        colour_brush_layout.addWidget(QLabel("color:"), 0, 0, 1, 1)
+        colour_brush_layout.addWidget(self.color_indicator, 0, 1, 1, 1)
+        colour_brush_layout.addWidget(button, 1, 0, 1, 2)
         colour_brush_widget.setLayout(colour_brush_layout)
 
         # brush thickness widget
@@ -125,16 +132,26 @@ class Window(QMainWindow):
         brush_thickness_layout.addWidget(thickness_size_4)
         brush_thickness_widget.setLayout(brush_thickness_layout)
 
+    def get_color_indicator(self):
+        red = self.painter.brushColor.getRgb()[0]
+        green = self.painter.brushColor.getRgb()[1]
+        blue = self.painter.brushColor.getRgb()[2]
+        return "background: rgb(" + str(red) + "," + str(green) + "," + str(blue) + ")"
+
     def get_color(self):
-        color = QColorDialog().getColor()
+        color = QColorDialog.getColor()
+        if color.isValid():
+            self.painter.brushColor = color
+            self.color_indicator.setStyleSheet(self.get_color_indicator())
 
     def open(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Images (*.png *.jpg)")
         if file_path == "":
             return
-        res = self.central_widget.image.load(file_path)
+        res = self.painter.image.load(file_path)
         if res:
-            self.central_widget.update()
+            self.painter.image = self.painter.image.scaled(self.painter.width(), self.painter.height())
+            self.painter.update()
 
     def save(self):
         current_path = os.getcwd()
@@ -142,11 +159,11 @@ class Window(QMainWindow):
                                                    "Images (*.png *.jpg)")
         if file_path == "":
             return
-        res = self.central_widget.image.save(file_path)
+        res = self.painter.image.save(file_path)
         print(res)
 
     def clear(self):
-        self.central_widget.image.fill(Qt.white)
+        self.painter.image.fill(Qt.white)
         self.update()
 
     def exit(self):
