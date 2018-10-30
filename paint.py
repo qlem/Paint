@@ -4,6 +4,12 @@ from PyQt5.QtGui import QIcon, QImage, QPainter, QPen, QColor
 import sys
 import os
 from PyQt5.QtCore import Qt, QPoint
+from enum import Enum
+
+
+class DrawMode(Enum):
+    CURVE = 0
+    LINE = 1
 
 
 class Painter(QWidget):
@@ -15,6 +21,7 @@ class Painter(QWidget):
 
         # default draw settings
         self.drawing = False
+        self.draw_mode = DrawMode.CURVE
         self.brush_size = 6
         self.brush_color = QColor(0, 0, 0)
         self.brush_line_type = Qt.SolidLine
@@ -24,24 +31,29 @@ class Painter(QWidget):
         # reference to last point recorded by mouse
         self.lastPoint = QPoint()
 
+    def draw(self, from_point, to_point):
+        painter = QPainter(self.image)
+        pen = QPen(self.brush_color, self.brush_size, self.brush_line_type,
+                   self.brush_cap_type, self.brush_join_type)
+        painter.setPen(pen)
+        painter.drawLine(from_point, to_point)
+        self.update()
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.drawing = True
             self.lastPoint = event.pos()
 
     def mouseMoveEvent(self, event):
-        if (event.buttons() & Qt.LeftButton) & self.drawing:
-            painter = QPainter(self.image)
-            pen = QPen(self.brush_color, self.brush_size, self.brush_line_type,
-                       self.brush_cap_type, self.brush_join_type)
-            painter.setPen(pen)
-            painter.drawLine(self.lastPoint, event.pos())
+        if (event.buttons() == Qt.LeftButton) & (self.draw_mode == DrawMode.CURVE) & self.drawing:
+            self.draw(self.lastPoint, event.pos())
             self.lastPoint = event.pos()
-            self.update()
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.drawing = False
+            if self.draw_mode == DrawMode.LINE:
+                self.draw(self.lastPoint, event.pos())
 
     def paintEvent(self, event):
         canvas_painter = QPainter(self)
@@ -53,6 +65,38 @@ class Painter(QWidget):
         self.image = self.image.scaled(self.width(), self.height())
 
 
+class DrawModeWidget(QWidget):
+    def __init__(self, painter):
+        super().__init__()
+
+        self.painter = painter
+
+        mode_1 = QRadioButton("curve")
+        mode_2 = QRadioButton("line")
+        mode_1.setChecked(True)
+
+        self.draw_mode_group = QButtonGroup()
+        self.draw_mode_group.addButton(mode_1)
+        self.draw_mode_group.addButton(mode_2)
+        i = 0
+        for button in self.draw_mode_group.buttons():
+            self.draw_mode_group.setId(button, i)
+            i += 1
+        self.draw_mode_group.buttonClicked.connect(self.set_draw_mode)
+
+        draw_mode_layout = QVBoxLayout()
+        draw_mode_layout.addWidget(mode_1)
+        draw_mode_layout.addWidget(mode_2)
+        self.setLayout(draw_mode_layout)
+
+    def set_draw_mode(self):
+        id_button = self.draw_mode_group.checkedId()
+        if id_button == 0:
+            self.painter.draw_mode = DrawMode.CURVE
+        elif id_button == 1:
+            self.painter.draw_mode = DrawMode.LINE
+
+
 class BrushColorWidget(QWidget):
     def __init__(self, painter):
         super().__init__()
@@ -62,7 +106,7 @@ class BrushColorWidget(QWidget):
         button = QPushButton("picker", self)
         button.clicked.connect(self.set_brush_color)
         self.color_indicator = QLabel()
-        self.color_indicator.setStyleSheet(self.get_color_indicator())
+        self.color_indicator.setStyleSheet("background: black")
 
         brush_colour_layout = QGridLayout()
         brush_colour_layout.addWidget(QLabel("color:"), 0, 0, 1, 1)
@@ -70,17 +114,15 @@ class BrushColorWidget(QWidget):
         brush_colour_layout.addWidget(button, 1, 0, 1, 2)
         self.setLayout(brush_colour_layout)
 
-    def get_color_indicator(self):
-        red = self.painter.brush_color.getRgb()[0]
-        green = self.painter.brush_color.getRgb()[1]
-        blue = self.painter.brush_color.getRgb()[2]
-        return "background: rgb(" + str(red) + "," + str(green) + "," + str(blue) + ")"
-
     def set_brush_color(self):
         color = QColorDialog.getColor()
         if color.isValid():
+            red = color.getRgb()[0]
+            green = color.getRgb()[1]
+            blue = color.getRgb()[2]
+            style = "background: rgb(" + str(red) + "," + str(green) + "," + str(blue) + ")"
+            self.color_indicator.setStyleSheet(style)
             self.painter.brush_color = color
-            self.color_indicator.setStyleSheet(self.get_color_indicator())
 
 
 class BrushThicknessWidget(QWidget):
@@ -118,11 +160,11 @@ class BrushLineTypeWidget(QWidget):
         self.painter = painter
 
         line_type_1 = QRadioButton("solid")
-        line_type_1.setChecked(True)
         line_type_2 = QRadioButton("dash")
         line_type_3 = QRadioButton("dot")
         line_type_4 = QRadioButton("dash dot")
         line_type_5 = QRadioButton("dash dot dot")
+        line_type_1.setChecked(True)
 
         self.line_type_group = QButtonGroup()
         self.line_type_group.addButton(line_type_1)
@@ -276,6 +318,13 @@ class Window(QMainWindow):
         self.painter = Painter()
         self.setCentralWidget(self.painter)
         self.painter.show()
+
+        # draw mode
+        self.draw_mode = QDockWidget("Draw mode")
+        self.addDockWidget(Qt.RightDockWidgetArea, self.draw_mode)
+        self.draw_mode.setWidget(DrawModeWidget(self.painter))
+        self.draw_mode.setMaximumHeight(self.draw_mode.minimumSizeHint().height())
+        self.draw_mode.setFixedWidth(200)
 
         # brush color
         self.brush_colour = QDockWidget("Brush colour")
