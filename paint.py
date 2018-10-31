@@ -31,6 +31,8 @@ class Painter(QWidget):
         # reference to last point recorded by mouse
         self.lastPoint = QPoint()
 
+        self.backup = QImage()
+
     def draw(self, from_point, to_point):
         painter = QPainter(self.image)
         pen = QPen(self.brush_color, self.brush_size, self.brush_line_type,
@@ -43,17 +45,20 @@ class Painter(QWidget):
         if event.button() == Qt.LeftButton:
             self.drawing = True
             self.lastPoint = event.pos()
+            if self.draw_mode == DrawMode.LINE:
+                self.backup = self.image.copy()
 
     def mouseMoveEvent(self, event):
         if (event.buttons() == Qt.LeftButton) & (self.draw_mode == DrawMode.CURVE) & self.drawing:
             self.draw(self.lastPoint, event.pos())
             self.lastPoint = event.pos()
+        if (event.buttons() == Qt.LeftButton) & (self.draw_mode == DrawMode.LINE) & self.drawing:
+            self.image = self.backup.copy()
+            self.draw(self.lastPoint, event.pos())
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.drawing = False
-            if self.draw_mode == DrawMode.LINE:
-                self.draw(self.lastPoint, event.pos())
 
     def paintEvent(self, event):
         canvas_painter = QPainter(self)
