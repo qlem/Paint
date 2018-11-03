@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDockWidget, QAction, QFileDialog, QWidget, QLabel, \
-    QPushButton, QColorDialog, QVBoxLayout, QGridLayout, QRadioButton, QButtonGroup, QSlider
+    QPushButton, QColorDialog, QVBoxLayout, QGridLayout, QRadioButton, QButtonGroup, QSlider, QMessageBox
 from PyQt5.QtGui import QIcon, QImage, QPainter, QPen, QColor
 import sys
 import os
@@ -18,7 +18,11 @@ class Painter(QWidget):
     def __init__(self):
         super().__init__()
 
-        # initialisation of the image that represents the "drawing sheet"
+        # init name and description
+        self.setAccessibleName("Painter")
+        self.setAccessibleDescription("This is the paint area. Allows the user to draw according to the selected options.")
+
+        # init image that represents the "drawing sheet"
         self.image = QImage(self.size(), QImage.Format_RGB32)
         self.image.fill(Qt.white)
 
@@ -85,6 +89,10 @@ class DrawModeWidget(QWidget):
     def __init__(self, painter):
         super().__init__()
 
+        # init name and description
+        self.setAccessibleName("Draw mode widget")
+        self.setAccessibleDescription("Allows to select the desired draw mode.")
+
         # reference to the painter widget
         self.painter = painter
 
@@ -109,7 +117,7 @@ class DrawModeWidget(QWidget):
         draw_mode_layout.addWidget(mode_2)
         self.setLayout(draw_mode_layout)
 
-    # button selection event listener
+    # function that change the draw mode of painter
     def set_draw_mode(self):
         id_button = self.draw_mode_group.checkedId()
         if id_button == 0:
@@ -122,6 +130,10 @@ class DrawModeWidget(QWidget):
 class BrushColorWidget(QWidget):
     def __init__(self, painter):
         super().__init__()
+
+        # init name and description
+        self.setAccessibleName("Brush color widget")
+        self.setAccessibleDescription("Allows to select the desired brush color and displays the current color.")
 
         # reference to the painter widget
         self.painter = painter
@@ -139,7 +151,7 @@ class BrushColorWidget(QWidget):
         brush_colour_layout.addWidget(button, 1, 0, 1, 2)
         self.setLayout(brush_colour_layout)
 
-    # color picker selection event listener
+    # function that change the brush color of painter
     def set_brush_color(self):
         color = QColorDialog.getColor()
         if color.isValid():
@@ -155,6 +167,10 @@ class BrushColorWidget(QWidget):
 class BrushThicknessWidget(QWidget):
     def __init__(self, painter):
         super().__init__()
+
+        # init name and description
+        self.setAccessibleName("Brush thickness widget")
+        self.setAccessibleDescription("Allows to change the brush thickness and displays the current size.")
 
         # reference to the painter widget
         self.painter = painter
@@ -178,7 +194,7 @@ class BrushThicknessWidget(QWidget):
         brush_thickness_layout.addWidget(self.thickness_size_label, 1, 1, 1, 1)
         self.setLayout(brush_thickness_layout)
 
-    # slider value change event listener
+    # function that change the brush thickness of painter
     def set_brush_thickness(self):
         self.painter.brush_size = self.thickness_slider.value()
         self.thickness_size_label.setText(str(self.thickness_slider.value()) + "px")
@@ -188,6 +204,10 @@ class BrushThicknessWidget(QWidget):
 class BrushLineTypeWidget(QWidget):
     def __init__(self, painter):
         super().__init__()
+
+        # init name and description
+        self.setAccessibleName("Brush line type widget")
+        self.setAccessibleDescription("Allows to select the brush line type.")
 
         # reference to the painter widget
         self.painter = painter
@@ -222,7 +242,7 @@ class BrushLineTypeWidget(QWidget):
         line_type_layout.addWidget(line_type_5)
         self.setLayout(line_type_layout)
 
-    # button selection event listener
+    # function that change the brush line type of painter
     def set_brush_line_type(self):
         id_button = self.line_type_group.checkedId()
         if id_button == 0:
@@ -241,6 +261,10 @@ class BrushLineTypeWidget(QWidget):
 class BrushCapTypeWidget(QWidget):
     def __init__(self, painter):
         super().__init__()
+
+        # init name and description
+        self.setAccessibleName("Brush cap type widget")
+        self.setAccessibleDescription("Allows to select the brush cap type.")
 
         # reference to the painter widget
         self.painter = painter
@@ -269,7 +293,7 @@ class BrushCapTypeWidget(QWidget):
         cap_type_layout.addWidget(cap_type_3)
         self.setLayout(cap_type_layout)
 
-    # button selection event listener
+    # function that change the brush cap type of painter
     def set_brush_cap_type(self):
         id_button = self.cap_type_group.checkedId()
         if id_button == 0:
@@ -284,6 +308,10 @@ class BrushCapTypeWidget(QWidget):
 class BrushJoinTypeWidget(QWidget):
     def __init__(self, painter):
         super().__init__()
+
+        # init name and description
+        self.setAccessibleName("Brush join type widget")
+        self.setAccessibleDescription("Allows to select the brush join type.")
 
         # reference to the painter widget
         self.painter = painter
@@ -312,7 +340,7 @@ class BrushJoinTypeWidget(QWidget):
         cap_type_layout.addWidget(join_type_3)
         self.setLayout(cap_type_layout)
 
-    # button selection event listener
+    # function that change the brush join type of painter
     def set_brush_join_type(self):
         id_button = self.join_type_group.checkedId()
         if id_button == 0:
@@ -328,44 +356,18 @@ class Window(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        # init size and title of the window
         top = 400
         left = 400
         width = 1200
         height = 800
-
         self.setWindowTitle("Paint Application")
         self.setGeometry(left, top, width, height)
 
-        # init menu
-        menu = self.menuBar()
-        file_menu = menu.addMenu("File")
-        help_menu = menu.addMenu("Help")
+        # reference to help mode
+        self.help_mode = False
 
-        # open
-        open_action = QAction(QIcon("./icons/open.png"), "Open", self)
-        open_action.setShortcut("Ctrl+O")
-        file_menu.addAction(open_action)
-        open_action.triggered.connect(self.open)
-
-        # save
-        save_action = QAction(QIcon("./icons/save.png"), "Save", self)
-        save_action.setShortcut("Ctrl+S")
-        file_menu.addAction(save_action)
-        save_action.triggered.connect(self.save)
-
-        # clear
-        clear_action = QAction(QIcon("./icons/clear.png"), "Clear", self)
-        clear_action.setShortcut("Ctrl+C")
-        file_menu.addAction(clear_action)
-        clear_action.triggered.connect(self.clear)
-
-        # exit
-        exit_action = QAction(QIcon("./icons/exit.png"), "Exit", self)
-        exit_action.setShortcut("Ctrl+X")
-        file_menu.addAction(exit_action)
-        exit_action.triggered.connect(self.exit)
-
-        # init painter widget
+        # init painter
         self.painter = Painter()
         self.setCentralWidget(self.painter)
         self.painter.show()
@@ -412,6 +414,135 @@ class Window(QMainWindow):
         self.brush_join_type.setMaximumHeight(self.brush_join_type.minimumSizeHint().height())
         self.brush_join_type.setFixedWidth(200)
 
+        # init menu
+        menu = self.menuBar()
+        file_menu = menu.addMenu("File")
+        window_menu = menu.addMenu("Window")
+        help_menu = menu.addMenu("Help")
+
+        # open action
+        open_action = QAction(QIcon("./icons/open.png"), "Open", self)
+        open_action.setShortcut("Ctrl+O")
+        file_menu.addAction(open_action)
+        open_action.triggered.connect(self.open)
+
+        # save action
+        save_action = QAction(QIcon("./icons/save.png"), "Save", self)
+        save_action.setShortcut("Ctrl+S")
+        file_menu.addAction(save_action)
+        save_action.triggered.connect(self.save)
+
+        # clear action
+        clear_action = QAction(QIcon("./icons/clear.png"), "Clear", self)
+        clear_action.setShortcut("Ctrl+C")
+        file_menu.addAction(clear_action)
+        clear_action.triggered.connect(self.clear)
+
+        # exit action
+        exit_action = QAction(QIcon("./icons/exit.png"), "Exit", self)
+        exit_action.setShortcut("Ctrl+X")
+        file_menu.addAction(exit_action)
+        exit_action.triggered.connect(self.exit)
+
+        # help about painter
+        help_painter = QAction("Painter", self)
+        help_menu.addAction(help_painter)
+        help_painter.triggered.connect(lambda: self.help_about(self.painter))
+
+        # help about draw mode
+        help_draw_mode = QAction("Draw mode", self)
+        help_menu.addAction(help_draw_mode)
+        help_draw_mode.triggered.connect(lambda: self.help_about(self.draw_mode.widget()))
+
+        # help about brush color
+        help_brush_color = QAction("Brush color", self)
+        help_menu.addAction(help_brush_color)
+        help_brush_color.triggered.connect(lambda: self.help_about(self.brush_colour.widget()))
+
+        # help about brush thickness
+        help_brush_thickness = QAction("Brush thickness", self)
+        help_menu.addAction(help_brush_thickness)
+        help_brush_thickness.triggered.connect(lambda: self.help_about(self.brush_thickness.widget()))
+
+        # help about brush line type
+        help_brush_line = QAction("Brush line type", self)
+        help_menu.addAction(help_brush_line)
+        help_brush_line.triggered.connect(lambda: self.help_about(self.brush_line_type.widget()))
+
+        # help about brush cap type
+        help_brush_line = QAction("Brush cap type", self)
+        help_menu.addAction(help_brush_line)
+        help_brush_line.triggered.connect(lambda: self.help_about(self.brush_cap_type.widget()))
+
+        # help about brush join type
+        help_brush_join = QAction("Brush join type", self)
+        help_menu.addAction(help_brush_join)
+        help_brush_join.triggered.connect(lambda: self.help_about(self.brush_join_type.widget()))
+
+        # help selection action
+        help_action = QAction(QIcon("./icons/help.png"), "Help about..", self)
+        help_action.setShortcut("Ctrl+H")
+        help_menu.addAction(help_action)
+        # help_action.triggered.connect(self.help_about_selection)
+
+        # menu interface draw mode widget
+        ui_draw_mode = QAction("Draw mode", self)
+        window_menu.addAction(ui_draw_mode)
+        ui_draw_mode.setCheckable(True)
+        ui_draw_mode.setChecked(True)
+        ui_draw_mode.changed.connect(
+            lambda: self.set_widget_visibility(self.draw_mode, ui_draw_mode.isChecked()))
+        self.draw_mode.visibilityChanged.connect(lambda: self.set_state_menu_ui(self.draw_mode, ui_draw_mode))
+
+        # menu interface brush color widget
+        ui_brush_color = QAction("Brush color", self)
+        window_menu.addAction(ui_brush_color)
+        ui_brush_color.setCheckable(True)
+        ui_brush_color.setChecked(True)
+        ui_brush_color.changed.connect(
+            lambda: self.set_widget_visibility(self.brush_colour, ui_brush_color.isChecked()))
+        self.brush_colour.visibilityChanged.connect(lambda: self.set_state_menu_ui(self.brush_colour, ui_brush_color))
+
+        # menu interface brush thickness widget
+        ui_brush_thickness = QAction("Brush thickness", self)
+        window_menu.addAction(ui_brush_thickness)
+        ui_brush_thickness.setCheckable(True)
+        ui_brush_thickness.setChecked(True)
+        ui_brush_thickness.changed.connect(
+            lambda: self.set_widget_visibility(self.brush_thickness, ui_brush_thickness.isChecked()))
+        self.brush_thickness.visibilityChanged.connect(
+            lambda: self.set_state_menu_ui(self.brush_thickness, ui_brush_thickness))
+
+        # menu interface brush line type widget
+        ui_brush_line_type = QAction("Brush line type", self)
+        window_menu.addAction(ui_brush_line_type)
+        ui_brush_line_type.setCheckable(True)
+        ui_brush_line_type.setChecked(True)
+        ui_brush_line_type.changed.connect(
+            lambda: self.set_widget_visibility(self.brush_line_type, ui_brush_line_type.isChecked()))
+        self.brush_line_type.visibilityChanged.connect(
+            lambda: self.set_state_menu_ui(self.brush_line_type, ui_brush_line_type))
+
+        # menu interface brush cap type widget
+        ui_brush_cap_type = QAction("Brush cap type", self)
+        window_menu.addAction(ui_brush_cap_type)
+        ui_brush_cap_type.setCheckable(True)
+        ui_brush_cap_type.setChecked(True)
+        ui_brush_cap_type.changed.connect(
+            lambda: self.set_widget_visibility(self.brush_cap_type, ui_brush_cap_type.isChecked()))
+        self.brush_cap_type.visibilityChanged.connect(
+            lambda: self.set_state_menu_ui(self.brush_cap_type, ui_brush_cap_type))
+
+        # menu interface brush join type widget
+        ui_brush_join_type = QAction("Brush join type", self)
+        window_menu.addAction(ui_brush_join_type)
+        ui_brush_join_type.setCheckable(True)
+        ui_brush_join_type.setChecked(True)
+        ui_brush_join_type.changed.connect(
+            lambda: self.set_widget_visibility(self.brush_join_type, ui_brush_join_type.isChecked()))
+        self.brush_join_type.visibilityChanged.connect(
+            lambda: self.set_state_menu_ui(self.brush_join_type, ui_brush_join_type))
+
     # function that allows to open an image
     def open(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Images (*.png *.jpg)")
@@ -446,6 +577,28 @@ class Window(QMainWindow):
     # function to exit
     def exit(self):
         self.close()
+
+    # function that displays information about a widget
+    @staticmethod
+    def help_about(widget):
+        modal = QMessageBox()
+        modal.setWindowTitle("Tip")
+        message = widget.accessibleName() + "\n\n" + widget.accessibleDescription()
+        modal.setText(message)
+        modal.exec()
+
+    # function that change the visibility of a widget
+    @staticmethod
+    def set_widget_visibility(widget, visible):
+        if visible:
+            widget.show()
+        else:
+            widget.hide()
+
+    # function that change the status of an interface menu item
+    @staticmethod
+    def set_state_menu_ui(widget, ui_option):
+        ui_option.setChecked(widget.isVisible())
 
 
 # This is the entry point of the program.
