@@ -1,2 +1,2 @@
 # paint
-Small paint program write in python.
+Small paint program write in python. Use Qt.
