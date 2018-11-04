@@ -20,13 +20,14 @@ class Painter(QWidget):
 
         # init name and description
         self.setAccessibleName("Painter")
-        self.setAccessibleDescription("This is the paint area. Allows the user to draw according to the selected options.")
+        self.setAccessibleDescription(
+            "This is the paint area. Allows the user to draw according to the selected options.")
 
         # init image that represents the "drawing sheet"
         self.image = QImage(self.size(), QImage.Format_RGB32)
         self.image.fill(Qt.white)
 
-        # default draw settings
+        # init default draw settings
         self.drawing = False
         self.draw_mode = DrawMode.CURVE
         self.brush_size = 6
@@ -138,7 +139,7 @@ class BrushColorWidget(QWidget):
         # reference to the painter widget
         self.painter = painter
 
-        # declaration of the color picker button and labels
+        # declaration of the color picker button and the labels
         button = QPushButton("picker", self)
         button.clicked.connect(self.set_brush_color)
         self.color_indicator = QLabel()
@@ -351,7 +352,7 @@ class BrushJoinTypeWidget(QWidget):
             self.painter.brush_join_type = Qt.RoundJoin
 
 
-# This class creates the main window and display all widgets that compose the UI.
+# This class creates the main window and display all widget and menu that compose the UI.
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -444,37 +445,37 @@ class Window(QMainWindow):
         file_menu.addAction(exit_action)
         exit_action.triggered.connect(self.exit)
 
-        # help about painter
+        # help about painter action
         help_painter = QAction("Painter", self)
         help_menu.addAction(help_painter)
         help_painter.triggered.connect(lambda: self.help_about(self.painter))
 
-        # help about draw mode
+        # help about draw mode action
         help_draw_mode = QAction("Draw mode", self)
         help_menu.addAction(help_draw_mode)
         help_draw_mode.triggered.connect(lambda: self.help_about(self.draw_mode.widget()))
 
-        # help about brush color
+        # help about brush color action
         help_brush_color = QAction("Brush color", self)
         help_menu.addAction(help_brush_color)
         help_brush_color.triggered.connect(lambda: self.help_about(self.brush_colour.widget()))
 
-        # help about brush thickness
+        # help about brush thickness action
         help_brush_thickness = QAction("Brush thickness", self)
         help_menu.addAction(help_brush_thickness)
         help_brush_thickness.triggered.connect(lambda: self.help_about(self.brush_thickness.widget()))
 
-        # help about brush line type
+        # help about brush line type action
         help_brush_line = QAction("Brush line type", self)
         help_menu.addAction(help_brush_line)
         help_brush_line.triggered.connect(lambda: self.help_about(self.brush_line_type.widget()))
 
-        # help about brush cap type
+        # help about brush cap type action
         help_brush_line = QAction("Brush cap type", self)
         help_menu.addAction(help_brush_line)
         help_brush_line.triggered.connect(lambda: self.help_about(self.brush_cap_type.widget()))
 
-        # help about brush join type
+        # help about brush join type action
         help_brush_join = QAction("Brush join type", self)
         help_menu.addAction(help_brush_join)
         help_brush_join.triggered.connect(lambda: self.help_about(self.brush_join_type.widget()))
@@ -483,9 +484,9 @@ class Window(QMainWindow):
         help_action = QAction(QIcon("./icons/help.png"), "Help about..", self)
         help_action.setShortcut("Ctrl+H")
         help_menu.addAction(help_action)
-        # help_action.triggered.connect(self.help_about_selection)
+        # TODO finish the help selection action
 
-        # menu interface draw mode widget
+        # ui draw mode widget action
         ui_draw_mode = QAction("Draw mode", self)
         window_menu.addAction(ui_draw_mode)
         ui_draw_mode.setCheckable(True)
@@ -494,7 +495,7 @@ class Window(QMainWindow):
             lambda: self.set_widget_visibility(self.draw_mode, ui_draw_mode.isChecked()))
         self.draw_mode.visibilityChanged.connect(lambda: self.set_state_menu_ui(self.draw_mode, ui_draw_mode))
 
-        # menu interface brush color widget
+        # ui brush color widget action
         ui_brush_color = QAction("Brush color", self)
         window_menu.addAction(ui_brush_color)
         ui_brush_color.setCheckable(True)
@@ -503,7 +504,7 @@ class Window(QMainWindow):
             lambda: self.set_widget_visibility(self.brush_colour, ui_brush_color.isChecked()))
         self.brush_colour.visibilityChanged.connect(lambda: self.set_state_menu_ui(self.brush_colour, ui_brush_color))
 
-        # menu interface brush thickness widget
+        # ui brush thickness widget action
         ui_brush_thickness = QAction("Brush thickness", self)
         window_menu.addAction(ui_brush_thickness)
         ui_brush_thickness.setCheckable(True)
@@ -513,7 +514,7 @@ class Window(QMainWindow):
         self.brush_thickness.visibilityChanged.connect(
             lambda: self.set_state_menu_ui(self.brush_thickness, ui_brush_thickness))
 
-        # menu interface brush line type widget
+        # ui brush line type widget action
         ui_brush_line_type = QAction("Brush line type", self)
         window_menu.addAction(ui_brush_line_type)
         ui_brush_line_type.setCheckable(True)
@@ -523,7 +524,7 @@ class Window(QMainWindow):
         self.brush_line_type.visibilityChanged.connect(
             lambda: self.set_state_menu_ui(self.brush_line_type, ui_brush_line_type))
 
-        # menu interface brush cap type widget
+        # ui brush cap type widget action
         ui_brush_cap_type = QAction("Brush cap type", self)
         window_menu.addAction(ui_brush_cap_type)
         ui_brush_cap_type.setCheckable(True)
@@ -533,7 +534,7 @@ class Window(QMainWindow):
         self.brush_cap_type.visibilityChanged.connect(
             lambda: self.set_state_menu_ui(self.brush_cap_type, ui_brush_cap_type))
 
-        # menu interface brush join type widget
+        # ui brush join type widget action
         ui_brush_join_type = QAction("Brush join type", self)
         window_menu.addAction(ui_brush_join_type)
         ui_brush_join_type.setCheckable(True)
@@ -574,7 +575,7 @@ class Window(QMainWindow):
         self.painter.image.fill(Qt.white)
         self.update()
 
-    # function to exit
+    # function to quit the program
     def exit(self):
         self.close()
 
