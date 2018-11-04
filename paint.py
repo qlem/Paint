@@ -80,8 +80,6 @@ class Painter(QWidget):
 
     # resize event listener
     def resizeEvent(self, event):
-        print("w: " + str(self.width()))
-        print("h: " + str(self.height()))
         self.image = self.image.scaled(self.width(), self.height())
 
 
@@ -368,7 +366,7 @@ class Window(QMainWindow):
         # reference to help mode
         self.help_mode = False
 
-        # init painter
+        # init painter widget
         self.painter = Painter()
         self.setCentralWidget(self.painter)
         self.painter.show()
