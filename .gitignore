@@ -1,5 +1,3 @@
 .idea
 sample.py
-*.png
-*.jpg
-*.jpeg
+./*.png
