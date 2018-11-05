@@ -482,7 +482,7 @@ class Window(QMainWindow):
         help_action = QAction(QIcon("./icons/help.png"), "Help about..", self)
         help_action.setShortcut("Ctrl+H")
         help_menu.addAction(help_action)
-        # TODO finish the help selection action
+        # TODO finish the help by click selection action
 
         # ui draw mode widget action
         ui_draw_mode = QAction("Draw mode", self)
