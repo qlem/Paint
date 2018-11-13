@@ -478,7 +478,7 @@ class Window(QMainWindow):
         help_menu.addAction(help_brush_join)
         help_brush_join.triggered.connect(lambda: self.help_about(self.brush_join_type.widget()))
 
-        # help selection action
+        # general help action
         help_general = QAction(QIcon("./icons/help.png"), "General help", self)
         help_general.setShortcut("Ctrl+H")
         help_menu.addAction(help_general)
