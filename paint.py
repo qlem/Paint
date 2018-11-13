@@ -479,10 +479,10 @@ class Window(QMainWindow):
         help_brush_join.triggered.connect(lambda: self.help_about(self.brush_join_type.widget()))
 
         # help selection action
-        help_action = QAction(QIcon("./icons/help.png"), "Help about..", self)
-        help_action.setShortcut("Ctrl+H")
-        help_menu.addAction(help_action)
-        # TODO finish the help by click selection action
+        help_general = QAction(QIcon("./icons/help.png"), "General help", self)
+        help_general.setShortcut("Ctrl+H")
+        help_menu.addAction(help_general)
+        help_general.triggered.connect(self.general_help)
 
         # ui draw mode widget action
         ui_draw_mode = QAction("Draw mode", self)
@@ -576,6 +576,15 @@ class Window(QMainWindow):
     # function to quit the program
     def exit(self):
         self.close()
+
+    # function that displays the general help
+    @staticmethod
+    def general_help():
+        modal = QMessageBox()
+        modal.setWindowTitle("Tip")
+        message = "Select the desired widget for get help in the help menu."
+        modal.setText(message)
+        modal.exec()
 
     # function that displays information about a widget
     @staticmethod
